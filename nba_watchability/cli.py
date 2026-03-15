@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -24,6 +25,8 @@ from .models import GameData
 
 console = Console()
 err_console = Console(stderr=True)
+
+_DATE_INPUT_RE = re.compile(r"^\d{8}$")
 
 
 def _render_bar(score: float, width: int = 20) -> str:
@@ -81,9 +84,9 @@ def _render_result_text(result: WatchabilityResult) -> None:
     console.print()
 
 
-def _render_result_json(result: WatchabilityResult) -> None:
-    """Print the result as JSON to stdout."""
-    data = {
+def _result_to_dict(result: WatchabilityResult) -> dict:
+    """Convert a WatchabilityResult to a JSON-serialisable dict."""
+    return {
         "total": result.total,
         "game_date": result.game_date.isoformat(),
         "away_team": result.away_team,
@@ -99,11 +102,61 @@ def _render_result_json(result: WatchabilityResult) -> None:
             for f in result.factors
         ],
     }
-    click.echo(json.dumps(data, indent=2))
+
+
+def _render_result_json(result: WatchabilityResult) -> None:
+    """Print the result as JSON to stdout."""
+    click.echo(json.dumps(_result_to_dict(result), indent=2))
+
+
+def _render_date_results_text(results: list[WatchabilityResult], date_str: str) -> None:
+    """Print all games for a date ranked highest to lowest."""
+    console.print()
+    console.rule(f"[bold cyan]NBA Games — {date_str}  ({len(results)} games)[/bold cyan]")
+    for result in results:
+        _render_result_text(result)
+
+
+def _score_one_game(
+    url: str,
+    session: http_module.BbrefSession,
+    cfg,
+    verbose: bool,
+) -> WatchabilityResult:
+    """Fetch, parse, and score one game from its boxscore URL."""
+    game_id = http_module.extract_game_id(url)
+    pbp_url = http_module.pbp_url_from_boxscore_url(url)
+
+    if verbose:
+        err_console.print(f"[dim]Fetching box score…[/dim]")
+    box_soup = session.get_soup(url, verbose=verbose)
+    box_data = boxscore_module.parse(box_soup, game_id)
+
+    if verbose:
+        err_console.print(f"[dim]Fetching play-by-play…[/dim]")
+    pbp_soup = session.get_soup(pbp_url, verbose=verbose)
+    pbp_data = pbp_module.parse(pbp_soup)
+
+    if verbose:
+        q4_snaps = [s for s in pbp_data.snapshots if s.quarter == 4]
+        clutch_snaps = [s for s in q4_snaps if s.seconds_elapsed >= 420]
+        ot_snaps = [s for s in pbp_data.snapshots if s.quarter >= 5]
+        quarters_seen = sorted({s.quarter for s in pbp_data.snapshots})
+        err_console.print(
+            f"[dim]PBP: {len(pbp_data.snapshots)} total snaps | "
+            f"quarters seen: {quarters_seen} | "
+            f"Q4 snaps: {len(q4_snaps)} | "
+            f"clutch-window snaps (Q4 last 5 min): {len(clutch_snaps)} | "
+            f"OT snaps: {len(ot_snaps)} | "
+            f"lead changes: {pbp_data.lead_changes} | ties: {pbp_data.ties}[/dim]"
+        )
+
+    game = GameData(box=box_data, pbp=pbp_data)
+    return scorer_module.score(game, cfg)
 
 
 @click.command()
-@click.argument("url")
+@click.argument("input")
 @click.option(
     "--config",
     "config_path",
@@ -124,58 +177,55 @@ def _render_result_json(result: WatchabilityResult) -> None:
     default=False,
     help="Show HTTP fetch progress and parse warnings.",
 )
-def main(url: str, config_path: str | None, output: str, verbose: bool) -> None:
-    """Score the watchability of an NBA game without spoiling the result.
+def main(input: str, config_path: str | None, output: str, verbose: bool) -> None:
+    """Score the watchability of NBA game(s) without spoiling the result.
 
-    URL should be a basketball-reference.com boxscore URL, e.g.:
+    INPUT can be:
 
-      https://www.basketball-reference.com/boxscores/202412250LAL.html
+      \b
+      A basketball-reference.com boxscore URL:
+        https://www.basketball-reference.com/boxscores/202412250LAL.html
+
+      A date in YYYYMMDD format (scores all games that day, ranked):
+        20260312
     """
     try:
-        # Load config
         cfg = config_module.load(config_path)
-
-        # Derive game ID and PBP URL
-        game_id = http_module.extract_game_id(url)
-        pbp_url = http_module.pbp_url_from_boxscore_url(url)
-
-        # Fetch and parse
         session = http_module.BbrefSession(cfg.http)
 
-        if verbose:
-            err_console.print(f"[dim]Fetching box score…[/dim]")
-        box_soup = session.get_soup(url, verbose=verbose)
-        box_data = boxscore_module.parse(box_soup, game_id)
+        if _DATE_INPUT_RE.match(input):
+            # DATE MODE — score all games on the given date
+            from .scraper import schedule as schedule_module
 
-        if verbose:
-            err_console.print(f"[dim]Fetching play-by-play…[/dim]")
-        pbp_soup = session.get_soup(pbp_url, verbose=verbose)
-        pbp_data = pbp_module.parse(pbp_soup)
+            index_url = schedule_module.date_index_url(input)
+            if verbose:
+                err_console.print(f"[dim]Fetching date index: {index_url}[/dim]")
+            index_soup = session.get_soup(index_url, verbose=verbose)
+            urls = schedule_module.parse_boxscore_urls(index_soup)
 
-        if verbose:
-            q4_snaps = [s for s in pbp_data.snapshots if s.quarter == 4]
-            clutch_snaps = [s for s in q4_snaps if s.seconds_elapsed >= 420]
-            ot_snaps = [s for s in pbp_data.snapshots if s.quarter >= 5]
-            quarters_seen = sorted({s.quarter for s in pbp_data.snapshots})
-            err_console.print(
-                f"[dim]PBP: {len(pbp_data.snapshots)} total snaps | "
-                f"quarters seen: {quarters_seen} | "
-                f"Q4 snaps: {len(q4_snaps)} | "
-                f"clutch-window snaps (Q4 last 5 min): {len(clutch_snaps)} | "
-                f"OT snaps: {len(ot_snaps)} | "
-                f"lead changes: {pbp_data.lead_changes} | ties: {pbp_data.ties}[/dim]"
-            )
+            if verbose:
+                err_console.print(f"[dim]Found {len(urls)} games[/dim]")
 
-        game = GameData(box=box_data, pbp=pbp_data)
+            results = []
+            for url in urls:
+                if verbose:
+                    err_console.print(f"[dim]--- Scoring {url} ---[/dim]")
+                results.append(_score_one_game(url, session, cfg, verbose))
 
-        # Score
-        result = scorer_module.score(game, cfg)
+            results.sort(key=lambda r: r.total, reverse=True)
 
-        # Output
-        if output == "json":
-            _render_result_json(result)
+            if output == "json":
+                click.echo(json.dumps([_result_to_dict(r) for r in results], indent=2))
+            else:
+                _render_date_results_text(results, input)
+
         else:
-            _render_result_text(result)
+            # SINGLE URL MODE — existing behaviour preserved exactly
+            result = _score_one_game(input, session, cfg, verbose)
+            if output == "json":
+                _render_result_json(result)
+            else:
+                _render_result_text(result)
 
     except NbaWatchabilityError as exc:
         err_console.print(

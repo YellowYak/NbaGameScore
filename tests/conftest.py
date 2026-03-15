@@ -18,3 +18,9 @@ def boxscore_soup() -> BeautifulSoup:
 def pbp_soup() -> BeautifulSoup:
     html = (FIXTURES / "pbp_sample.html").read_text(encoding="utf-8")
     return BeautifulSoup(html, "lxml")
+
+
+@pytest.fixture()
+def schedule_soup() -> BeautifulSoup:
+    html = (FIXTURES / "schedule_sample.html").read_text(encoding="utf-8")
+    return BeautifulSoup(html, "lxml")

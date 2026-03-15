@@ -16,6 +16,17 @@ class InvalidUrlError(NbaWatchabilityError):
         )
 
 
+class InvalidDateError(NbaWatchabilityError):
+    """Input string is not a valid YYYYMMDD date."""
+
+    def __init__(self, value: str) -> None:
+        self.value = value
+        super().__init__(
+            f"Not a valid date: {value!r}\n"
+            "Expected format: YYYYMMDD (e.g. 20260312)"
+        )
+
+
 class ConfigError(NbaWatchabilityError):
     """Config file is missing a required field or contains an invalid value."""
 

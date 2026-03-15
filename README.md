@@ -1,6 +1,6 @@
 # NBA Watchability Scorer
 
-Scores NBA games for watchability — without spoiling the result. Give it a basketball-reference.com box score URL and it returns a 0–100 score based on how exciting the game was.
+Scores NBA games for watchability — without spoiling the result. Give it a basketball-reference.com box score URL **or a date** and it returns a 0–100 score (per game) based on how exciting each game was.
 
 ## Installation
 
@@ -10,14 +10,16 @@ pip install -e .
 
 ## Usage
 
-```bash
-python -m nba_watchability <url>
-```
-
-where `<url>` is any basketball-reference.com box score URL, e.g.:
+**Score a single game** — pass a basketball-reference.com box score URL:
 
 ```bash
 python -m nba_watchability https://www.basketball-reference.com/boxscores/202503140DEN.html
+```
+
+**Score all games on a date** — pass a date in `YYYYMMDD` format. All games are fetched, scored, and printed ranked highest to lowest:
+
+```bash
+python -m nba_watchability 20260312
 ```
 
 ### Finding a URL
