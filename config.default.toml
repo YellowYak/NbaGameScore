@@ -1,0 +1,95 @@
+# nba-watchability default configuration
+# All weights are relative integers — they are normalized to sum to 1.0,
+# so you can use any scale (e.g. 30/25/20/15/10 or 3/2.5/2/1.5/1).
+
+[weights]
+closeness    = 30
+lead_changes = 25
+anomalies    = 20
+team_quality = 15
+clutch       = 20
+
+# ---------------------------------------------------------------------------
+# Closeness factor
+# Piecewise linear curve mapping margin-of-victory to a 0.0–1.0 score.
+# Must be sorted by margin ascending. Values between breakpoints are
+# linearly interpolated. Margins above the last breakpoint → 0.0.
+# ---------------------------------------------------------------------------
+[scoring.closeness]
+
+[[scoring.closeness.breakpoints]]
+margin = 0
+score  = 1.0
+
+[[scoring.closeness.breakpoints]]
+margin = 3
+score  = 1.0
+
+[[scoring.closeness.breakpoints]]
+margin = 7
+score  = 0.65
+
+[[scoring.closeness.breakpoints]]
+margin = 15
+score  = 0.25
+
+[[scoring.closeness.breakpoints]]
+margin = 21
+score  = 0.0
+
+# ---------------------------------------------------------------------------
+# Back-and-forth factor
+# ---------------------------------------------------------------------------
+[scoring.lead_changes]
+max_for_full_score  = 20   # lead changes >= this → sub-score of 1.0
+ties_max            = 10   # ties >= this → sub-score of 1.0
+ties_weight         = 0.3  # weight of ties sub-score within this factor
+ot_bonus_per_period = 0.20 # added to B&F raw score per overtime period (capped at 1.0)
+
+# ---------------------------------------------------------------------------
+# Statistical anomalies factor
+# Each achievement earns "anomaly points". Score = min(total / cap_points, 1.0)
+# ---------------------------------------------------------------------------
+[scoring.anomalies]
+cap_points = 40           # anomaly points needed for a score of 1.0
+
+[scoring.anomalies.achievements]
+points_50       = 30      # any player scores 50+ points
+points_40_to_49 = 20      # any player scores 40–49 points
+triple_double   = 25      # any player records a triple-double (10+ pts/reb/ast)
+rebounds_20     = 20      # any player grabs 20+ rebounds
+assists_10      = 15      # any player records 10+ assists
+steals_5        = 15      # any player records 5+ steals
+blocks_5        = 10      # any player records 5+ blocks
+
+# ---------------------------------------------------------------------------
+# Team quality factor
+# Based on both teams' win % at the time of the game.
+# avg_win_pct >= elite_threshold → score 1.0
+# avg_win_pct <= floor_threshold → score 0.0
+# Linear interpolation between the two thresholds.
+# ---------------------------------------------------------------------------
+[scoring.team_quality]
+elite_threshold = 0.600
+floor_threshold = 0.300
+
+# ---------------------------------------------------------------------------
+# Clutch time factor
+# Counts scoring plays that occur in the final 5 minutes of Q4 (or any OT
+# period) while the score differential is <= score_differential points.
+# More clutch scoring plays → higher score.
+# ---------------------------------------------------------------------------
+[scoring.clutch]
+score_differential       = 5    # max point gap to count as clutch
+max_plays_for_full_score = 10   # excitement points needed for a score of 1.0
+play_weight              = 1.0  # weight for a regular clutch scoring play
+tie_weight               = 2.0  # weight when the play ties the game
+lead_change_weight       = 3.0  # weight when the play changes the lead
+
+# ---------------------------------------------------------------------------
+# HTTP / scraping settings
+# ---------------------------------------------------------------------------
+[http]
+user_agent    = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+request_delay = 2.0    # seconds to wait between the two HTTP requests
+timeout       = 15     # seconds per request before giving up

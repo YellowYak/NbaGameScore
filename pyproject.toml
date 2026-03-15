@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nba-watchability"
+version = "0.1.0"
+description = "Score NBA games for watchability without spoiling the result"
+requires-python = ">=3.11"
+dependencies = [
+    "curl_cffi>=0.7",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "click>=8.1",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "responses>=0.25",
+]
+
+[project.scripts]
+nba-score = "nba_watchability.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nba_watchability*"]
+
+[tool.setuptools.package-data]
+nba_watchability = ["config.default.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
