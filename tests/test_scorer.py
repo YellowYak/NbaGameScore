@@ -193,8 +193,8 @@ class TestAnomalyScore:
         game = _make_game(players=players)
         result = scorer.score(game, self.cfg)
         star = next(f for f in result.factors if f.name == "Star Moments")
-        # TD = 25 pts + assists_10 = 15 pts = 40 → capped at 1.0
-        assert star.raw_score == 1.0
+        # TD = 25 pts; assists_15 does NOT fire (10 ast < 15 threshold) → 25/40 = 0.625
+        assert abs(star.raw_score - 0.625) < 0.01
 
     def test_combined_achievements_capped_at_1(self):
         players = [_player("Beast", pts=55, reb=22, ast=11, stl=5, blk=5)]

@@ -71,8 +71,8 @@ def _anomaly_score(game: GameData, cfg: Config) -> float:
         if player.rebounds >= 20:
             total_pts += ach.rebounds_20
 
-        if player.assists >= 10:
-            total_pts += ach.assists_10
+        if player.assists >= 15:
+            total_pts += ach.assists_15
 
         if player.steals >= 5:
             total_pts += ach.steals_5

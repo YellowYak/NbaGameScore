@@ -39,7 +39,7 @@ class AnomalyAchievements:
     points_40_to_49: int = 20
     triple_double: int = 25
     rebounds_20: int = 20
-    assists_10: int = 15
+    assists_15: int = 15
     steals_5: int = 15
     blocks_5: int = 10
 
@@ -151,7 +151,7 @@ def _parse_config(raw: dict[str, Any], source: str) -> Config:
             points_40_to_49=int(ach_raw.get("points_40_to_49", 20)),
             triple_double=int(ach_raw.get("triple_double", 25)),
             rebounds_20=int(ach_raw.get("rebounds_20", 20)),
-            assists_10=int(ach_raw.get("assists_10", 15)),
+            assists_15=int(ach_raw.get("assists_15", 15)),
             steals_5=int(ach_raw.get("steals_5", 15)),
             blocks_5=int(ach_raw.get("blocks_5", 10)),
         )

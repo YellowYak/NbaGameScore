@@ -58,7 +58,7 @@ points_50       = 30      # any player scores 50+ points
 points_40_to_49 = 20      # any player scores 40–49 points
 triple_double   = 25      # any player records a triple-double (10+ pts/reb/ast)
 rebounds_20     = 20      # any player grabs 20+ rebounds
-assists_10      = 15      # any player records 10+ assists
+assists_15      = 15      # any player records 15+ assists
 steals_5        = 15      # any player records 5+ steals
 blocks_5        = 10      # any player records 5+ blocks
 
