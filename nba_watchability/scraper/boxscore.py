@@ -163,11 +163,9 @@ def _extract_line_score(
         scores: list[int] = []
         for cell in cells:
             stat = cell.get("data-stat", "")
-            if stat == "team_id":
+            if stat in ("team_id", "T"):
                 continue
             text = cell.get_text(strip=True)
-            if text == "T":
-                continue
             try:
                 scores.append(int(text))
             except ValueError:

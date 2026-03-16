@@ -20,3 +20,6 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+
+# Tool output
+output.json

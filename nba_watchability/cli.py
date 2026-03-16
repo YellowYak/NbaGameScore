@@ -86,11 +86,19 @@ def _render_result_text(result: WatchabilityResult) -> None:
 
 def _result_to_dict(result: WatchabilityResult) -> dict:
     """Convert a WatchabilityResult to a JSON-serialisable dict."""
+    if result.away_score > result.home_score:
+        winner = result.away_team
+    else:
+        winner = result.home_team
     return {
         "total": result.total,
         "game_date": result.game_date.isoformat(),
+        "boxscore_url": result.boxscore_url,
         "away_team": result.away_team,
+        "away_score": result.away_score,
         "home_team": result.home_team,
+        "home_score": result.home_score,
+        "winner": winner,
         "overtime_periods": result.overtime_periods,
         "factors": [
             {
@@ -152,7 +160,7 @@ def _score_one_game(
         )
 
     game = GameData(box=box_data, pbp=pbp_data)
-    return scorer_module.score(game, cfg)
+    return scorer_module.score(game, cfg, url=url)
 
 
 @click.command()

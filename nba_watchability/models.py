@@ -125,5 +125,8 @@ class WatchabilityResult:
     factors: tuple[FactorScore, ...]
     game_date: date
     away_team: str                      # team name (not abbreviation)
+    away_score: int
     home_team: str
+    home_score: int
     overtime_periods: int
+    boxscore_url: str = ""              # basketball-reference.com URL

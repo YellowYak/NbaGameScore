@@ -39,7 +39,9 @@ python -m nba_watchability 20260312
 
 ## Output
 
-The tool prints a spoiler-free report — no final score, no winner, no individual point totals, and no indication of whether the game went to overtime:
+### Text (default)
+
+The default text output is spoiler-free — no final score, no winner, no individual point totals:
 
 ```
 ──────────────── NBA Watchability Score ────────────────
@@ -55,6 +57,31 @@ The tool prints a spoiler-free report — no final score, no winner, no individu
    Clutch Time            85   █████████████████░░░
 
   *** Spoiler-free: no scores or game outcomes shown ***
+```
+
+### JSON (`--output json`)
+
+JSON output **does include the final score and winner** — useful for piping to other tools. Pass `--output json` to enable it:
+
+```json
+{
+  "total": 87,
+  "game_date": "2025-03-14",
+  "boxscore_url": "https://www.basketball-reference.com/boxscores/202503140DEN.html",
+  "away_team": "Denver Nuggets",
+  "away_score": 115,
+  "home_team": "Los Angeles Lakers",
+  "home_score": 112,
+  "winner": "Denver Nuggets",
+  "overtime_periods": 0,
+  "factors": [
+    { "name": "Closeness",      "score": 95, "weight": 0.2353, "contribution": 22.35 },
+    { "name": "Back-and-Forth", "score": 80, "weight": 0.1961, "contribution": 15.69 },
+    { "name": "Star Moments",   "score": 75, "weight": 0.1569, "contribution": 11.76 },
+    { "name": "Team Quality",   "score": 90, "weight": 0.1176, "contribution": 10.59 },
+    { "name": "Clutch Time",    "score": 85, "weight": 0.1569, "contribution": 13.34 }
+  ]
+}
 ```
 
 ## Adjusting the Scoring Weights

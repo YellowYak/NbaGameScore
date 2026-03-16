@@ -152,7 +152,7 @@ def _clutch_score(game: GameData, cfg: Config) -> float:
 # ---------------------------------------------------------------------------
 
 
-def score(game: GameData, cfg: Config) -> WatchabilityResult:
+def score(game: GameData, cfg: Config, url: str = "") -> WatchabilityResult:
     """Compute the watchability score for a game.
 
     Args:
@@ -197,6 +197,9 @@ def score(game: GameData, cfg: Config) -> WatchabilityResult:
         factors=tuple(factors),
         game_date=game.box.game_date,
         away_team=game.box.away_team.name,
+        away_score=game.box.final_away,
         home_team=game.box.home_team.name,
+        home_score=game.box.final_home,
         overtime_periods=ot_periods,
+        boxscore_url=url,
     )
