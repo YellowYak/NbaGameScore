@@ -32,6 +32,7 @@ The tool scrapes basketball-reference.com box score and play-by-play pages, then
 URL → scraper/http.py (BbrefSession) → boxscore.py + pbp.py parsers
     → models.py (GameData: BoxScoreData + PlayByPlayData)
     → scorer.py → WatchabilityResult
+    → api.py (score_game / score_date — library entry points)
     → cli.py (Rich table or JSON output)
 ```
 

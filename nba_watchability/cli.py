@@ -14,13 +14,10 @@ from rich.table import Table
 from rich import box as rich_box
 
 from . import config as config_module
-from . import scorer as scorer_module
+from .api import _score_game_with_session
 from .exceptions import NbaWatchabilityError
 from .models import WatchabilityResult
 from .scraper import http as http_module
-from .scraper import boxscore as boxscore_module
-from .scraper import pbp as pbp_module
-from .models import GameData
 
 
 console = Console()
@@ -132,35 +129,10 @@ def _score_one_game(
     verbose: bool,
 ) -> WatchabilityResult:
     """Fetch, parse, and score one game from its boxscore URL."""
-    game_id = http_module.extract_game_id(url)
-    pbp_url = http_module.pbp_url_from_boxscore_url(url)
-
     if verbose:
         err_console.print(f"[dim]Fetching box score…[/dim]")
-    box_soup = session.get_soup(url, verbose=verbose)
-    box_data = boxscore_module.parse(box_soup, game_id)
-
-    if verbose:
         err_console.print(f"[dim]Fetching play-by-play…[/dim]")
-    pbp_soup = session.get_soup(pbp_url, verbose=verbose)
-    pbp_data = pbp_module.parse(pbp_soup)
-
-    if verbose:
-        q4_snaps = [s for s in pbp_data.snapshots if s.quarter == 4]
-        clutch_snaps = [s for s in q4_snaps if s.seconds_elapsed >= 420]
-        ot_snaps = [s for s in pbp_data.snapshots if s.quarter >= 5]
-        quarters_seen = sorted({s.quarter for s in pbp_data.snapshots})
-        err_console.print(
-            f"[dim]PBP: {len(pbp_data.snapshots)} total snaps | "
-            f"quarters seen: {quarters_seen} | "
-            f"Q4 snaps: {len(q4_snaps)} | "
-            f"clutch-window snaps (Q4 last 5 min): {len(clutch_snaps)} | "
-            f"OT snaps: {len(ot_snaps)} | "
-            f"lead changes: {pbp_data.lead_changes} | ties: {pbp_data.ties}[/dim]"
-        )
-
-    game = GameData(box=box_data, pbp=pbp_data)
-    return scorer_module.score(game, cfg, url=url)
+    return _score_game_with_session(url, session, cfg)
 
 
 @click.command()

@@ -84,6 +84,30 @@ JSON output **does include the final score and winner** — useful for piping to
 }
 ```
 
+## Python API
+
+The package is also importable as a library — no CLI required.
+
+```python
+from nba_watchability import score_game, score_date, WatchabilityResult
+
+# Single game
+result: WatchabilityResult = score_game(
+    "https://www.basketball-reference.com/boxscores/202503140DEN.html"
+)
+print(result.total, result.away_team, "vs", result.home_team)
+
+# All games on a date, ranked highest to lowest
+games = score_date("20260312")
+for g in games:
+    print(g.total, g.away_team, "vs", g.home_team)
+
+# With a custom config file
+result = score_game(url, config_path="my_weights.toml")
+```
+
+`score_game` and `score_date` raise `NbaWatchabilityError` (or a subclass) on network or parse failures.
+
 ## Adjusting the Scoring Weights
 
 Copy the built-in defaults and edit to taste:
