@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from pathlib import Path
 
 from . import config as _config
 from . import scorer as _scorer
+from .exceptions import InvalidDateError
 from .models import GameData, WatchabilityResult
 from .scraper import boxscore as _boxscore
 from .scraper import http as _http
@@ -24,6 +26,15 @@ def score_date(
     date_str: str, config_path: str | Path | None = None
 ) -> list[WatchabilityResult]:
     """Fetch and score all games on a date (YYYYMMDD), sorted highest first."""
+    try:
+        parsed = datetime.strptime(date_str, "%Y%m%d").date()
+    except ValueError:
+        raise InvalidDateError(date_str)
+    if parsed >= date.today():
+        raise InvalidDateError(
+            date_str,
+            f"Date must be in the past: scores are not available for {date_str}.",
+        )
     cfg = _config.load(config_path)
     session = _http.BbrefSession(cfg.http)
     index_url = _schedule.date_index_url(date_str)

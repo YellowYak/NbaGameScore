@@ -19,12 +19,14 @@ class InvalidUrlError(NbaWatchabilityError):
 class InvalidDateError(NbaWatchabilityError):
     """Input string is not a valid YYYYMMDD date."""
 
-    def __init__(self, value: str) -> None:
+    def __init__(self, value: str, message: str | None = None) -> None:
         self.value = value
-        super().__init__(
-            f"Not a valid date: {value!r}\n"
-            "Expected format: YYYYMMDD (e.g. 20260312)"
-        )
+        if message is None:
+            message = (
+                f"Not a valid date: {value!r}\n"
+                "Expected format: YYYYMMDD (e.g. 20260312)"
+            )
+        super().__init__(message)
 
 
 class ConfigError(NbaWatchabilityError):
