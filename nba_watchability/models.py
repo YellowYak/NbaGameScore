@@ -111,6 +111,11 @@ class FactorScore:
     weight: float       # normalised weight (0.0 – 1.0)
     contribution: float # raw_score * weight * 100
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "raw_score", round(self.raw_score, 4))
+        object.__setattr__(self, "weight", round(self.weight, 4))
+        object.__setattr__(self, "contribution", round(self.contribution, 4))
+
     @property
     def display_score(self) -> int:
         """Factor score as a 0–100 integer for display."""
